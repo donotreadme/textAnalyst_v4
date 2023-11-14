@@ -14,57 +14,70 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.frank.textanalyst_v4.domain.Text;
-import com.frank.textanalyst_v4.repositories.TextRepository;
 import com.frank.textanalyst_v4.services.TextService;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("text")
 public class TextController {
 
 	private final TextService textService;
-	private TextRepository textRepository;
 
 	@Autowired
-	public TextController(TextService textService, TextRepository textRepository) {
+	public TextController(TextService textService) {
 		this.textService = textService;
-		this.textRepository = textRepository;
 	}
 
 	@GetMapping
 	public List<Text> getText() {
-		return textService.saveFromFileSystem("D:/USB Backup/Text/proofed", true); // TODO that's just for testing	
+		List<Text> allTexts = textService.getAllProofRead();
+		allTexts.addAll(textService.getAllNotProofRead());
+		return allTexts;
+	}
+
+	@GetMapping(path = "/by/proofed")
+	public List<String> getProofedDepending(@RequestParam(value = "value", required = true) boolean isProofed) {
+		return textService.getAllTitles(isProofed);
 	}
 	
-	@GetMapping(path = "/isProofed")
-	public List<Text> getProofedDepending(@RequestParam(value = "value", required = true) boolean isProofed) {
-		if (isProofed) {
-			return textService.getAllProofRead();
-		}else {
-			return textService.getAllNotProofRead();
-		}
+	@GetMapping(path = "/titles")
+	public List<String> getTitles(@RequestParam(value = "contain", required = false) String title) {
+		return null; // TODO implement
 	}
 
 	@GetMapping(path = "/{textId}")
-	public Text getTextById(@PathVariable("textId") int id) {
-		return textService.getTextById(id);
+	public Text getTextById(@PathVariable("textId") int id, 
+			@RequestParam(value = "highlightDialog", required = false, defaultValue = "false") boolean highlightDialog, 
+			@RequestParam(value = "tagText", required = false, defaultValue = "false") boolean tagText) {
+		Text result = textService.getTextById(id);
+		result.getMetric().update(result.getText());
+		if (highlightDialog) {
+			result.setText(textService.findModifyAllDirectSpeech(result.getText()));
+		}
+		if (tagText) {
+			result.setText(textService.addTagsToText(result.getText()));
+		}
+		return result;
 	}
 
-	@GetMapping(path = "/findByTitle")
-	public List<Text> getTextByTitle(@RequestParam(value = "title", defaultValue = "") String title) {
-		// TODO testing
+	@GetMapping(path = "/by/title")
+	public Text getTextByTitle(@RequestParam(value = "title", required = true, defaultValue = "") String title, 
+			@RequestParam(value = "highlightDialog", required = false, defaultValue = "false") boolean highlightDialog, 
+			@RequestParam(value = "tagText", required = false, defaultValue = "false") boolean tagText) {
+		// TODO utilize find by id pipeline, to get the text tagged and highlighted
 		if (title != "") {
-			return textService.getTextbyTitle(title);
-		}else {
+			Text result = textService.getTextbyTitle(title).get(0); //TODO fix me!
+			result.getMetric().update(result.getText());
+			if (highlightDialog) {
+				result.setText(textService.findModifyAllDirectSpeech(result.getText()));
+			}
+			if (tagText) {
+				result.setText(textService.addTagsToText(result.getText()));
+			}
+			return result;
+		} else {
 			throw new IllegalArgumentException("The argument can not be null");
 		}
-		
-	}
 
-	@GetMapping(path = "/{textId}/tagged")
-	public Text getTaggedText(@PathVariable("textId") int id) {
-		return textService.getTaggedText(id);
 	}
 
 	@PostMapping(path = "/add")

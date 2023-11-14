@@ -1,12 +1,12 @@
 function displayTextByTitle(title) {
     title = encodeURIComponent(title)
-    const content = `http://localhost:8080/text/findByTitle?title=${title}`;
+    const content = `http://localhost:8080/text/by/title?title=${title}&highlightDialog=true`;
     fetch(content)
         .then(response => response.json())
         .then(data => {
-            const textarea = document.getElementById('floatingTextarea');
-            textarea.value = data[0].text;
-            updateMetrics(data[0].metric);
+            var textarea = tinymce.get('centralTextarea');
+            textarea.setContent(data.text.replaceAll("\n", "<br>"));
+            updateMetrics(data.metric);
         })
         .catch(error => {
             console.error('Error fetching text by title:', error);
@@ -25,13 +25,18 @@ function updateMetrics(textMetrics) {
 }
 
 function loadTitles() {
-    fetch('http://localhost:8080/text') // TODO: change to the correct api
-        .then(response => response.json())
-        .then(data => {
-            const dropdownItems = document.getElementById('titlesDropdown');
+    const proofed = document.getElementById('checkProofed').checked;
+    const content = `http://localhost:8080/text/by/proofed?value=${proofed}`;
+    let dropdownItems = document.getElementById('titlesDropdown');
+    while (dropdownItems.firstChild) {
+        dropdownItems.removeChild(dropdownItems.firstChild);
+      }
+    fetch(content) 
+        .then(response => response.json()) 
+        .then(data => {            
             // Loop through the JSON data and create dropdown items
             data.forEach(item => {
-                const title = item.title;
+                const title = item;
                 const menuItem = document.createElement('a');
                 menuItem.className = 'dropdown-item';
                 menuItem.textContent = title;
@@ -39,9 +44,17 @@ function loadTitles() {
                     displayTextByTitle(title);
                 });
                 dropdownItems.appendChild(menuItem);
+                dropdownItems.remo
             });
         })
         .catch(error => {
             console.error('Error fetching JSON data:', error);
         });
+}
+
+function highlightDirectSpeech(editor) {/*
+    var content = editor.getContent();
+    var directSpeechRegex = /"(.*?)"/g; // TODO decide if to handle this front or backend
+    var highlightedContent = content.replace(directSpeechRegex, '<strong>"$1"</strong>');
+	editor.setContent(highlightedContent);*/
 }

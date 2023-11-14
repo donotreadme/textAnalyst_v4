@@ -14,24 +14,26 @@ import jakarta.persistence.Transient;
 @Table(name = "texts")
 public class Text {
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 	private String title;
-	@Column(columnDefinition="MEDIUMTEXT")
+	@Column(columnDefinition = "MEDIUMTEXT")
 	private String text;
 	private Date dateCreated;
 	@Transient
-	private TextMetric metric;
-	private int rating;
+	private TextMetric metric = new TextMetric("");
+	@Transient
+	private int rating = 0;
 	private String summary;
 	private boolean isVoiced;
 	private boolean isProofRead;
-	
-	public Text() {		
+	private boolean markedForDeletion;
+
+	public Text() {
 	}
 
-	public Text(int id, String title, String text, Date dateCreated, int rating, String summary, 
-			boolean isVoiced, boolean isProofRead) {
+	public Text(int id, String title, String text, Date dateCreated, int rating, String summary, boolean isVoiced,
+			boolean isProofRead, boolean markedForDeletion) {
 		super();
 		this.id = id;
 		this.title = title;
@@ -41,8 +43,9 @@ public class Text {
 		this.rating = rating;
 		this.summary = summary;
 		this.isVoiced = isVoiced;
+		this.markedForDeletion = markedForDeletion;
 	}
-	
+
 	public Text(String title, String text, Date dateCreated, boolean isProofRead) {
 		super();
 		this.title = title;
@@ -50,7 +53,6 @@ public class Text {
 		this.dateCreated = dateCreated;
 		this.metric = new TextMetric(text);
 		this.isProofRead = isProofRead;
-		this.rating = 0;
 		this.summary = "";
 		this.isVoiced = false;
 	}
@@ -60,7 +62,7 @@ public class Text {
 		this.text = text;
 		this.metric = new TextMetric(text);
 	}
-	
+
 	public Text(String title, String text) {
 		super();
 		this.text = text;
@@ -134,6 +136,14 @@ public class Text {
 
 	public void setProofRead(boolean isProofRead) {
 		this.isProofRead = isProofRead;
+	}
+
+	public boolean isMarkedForDeletion() {
+		return markedForDeletion;
+	}
+
+	public void setMarkedForDeletion(boolean markedForDeletion) {
+		this.markedForDeletion = markedForDeletion;
 	}
 
 }

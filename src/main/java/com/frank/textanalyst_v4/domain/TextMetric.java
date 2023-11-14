@@ -11,7 +11,7 @@ public class TextMetric {
 	public TextMetric(String text) {
 		this.update(text);
 	}
-	
+
 	public void update(String text) {
 		if (!(text == null || text.trim().isEmpty())) { // Check if the text is empty, if not get metrics
 			this.numberOfParagraphs = this.calculateNumberOfParagraphs(text);
